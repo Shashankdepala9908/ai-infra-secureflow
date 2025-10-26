@@ -1,0 +1,7 @@
+global:
+  scrape_interval: ${PROM_INTERVAL}
+
+scrape_configs:
+  - job_name: "model-service"
+    static_configs:
+      - targets: ["model-service:6060"]

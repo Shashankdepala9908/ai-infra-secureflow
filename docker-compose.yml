@@ -1,0 +1,57 @@
+
+
+services:
+  gateway-layer:
+    build: ./gateway_layer
+    ports:
+      - "9444:443"
+    depends_on:
+      - model-service
+    networks:
+      - private_net
+
+  model-service:
+    build: ./model_service
+    expose:
+      - "6060"
+    depends_on:
+      - data-store
+    networks:
+      - private_net
+
+  data-store:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./data_store/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    networks:
+      - private_net
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    networks:
+      - private_net
+
+  grafana:
+    image: grafana/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=flowadmin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana_dash:/var/lib/grafana/dashboards:ro
+    networks:
+      - private_net
+
+networks:
+  private_net:
+
+volumes:
+  pg_data:
+  grafana_data:
